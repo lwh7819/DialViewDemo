@@ -47,14 +47,14 @@ public class DialView extends View {
     private OnDialViewTouch onDialViewTouch;
 
     //自定义属性
-    int startColor = Color.parseColor("#ffcc00"); //刻度渐变色开始值
-    int endColor = Color.parseColor("#ff3300"); //刻度渐变色结束值
-    int textColor = Color.parseColor("#cccccc"); //刻度文字颜色
-    int centerTextColor = Color.parseColor("#cccccc"); //中间当前值文字颜色
-    int backGroundColor = Color.TRANSPARENT; //背景色
-    int lineBackGroundColor = Color.parseColor("#cccccc"); //刻度背景色
-    int dottedLineBackGroundColor = Color.parseColor("#cccccc"); //虚线背景色
-    int circleColor = Color.parseColor("#E6E8FA"); //圆球背景色
+    private int startColor = Color.parseColor("#ffcc00"); //刻度渐变色开始值
+    private int endColor = Color.parseColor("#ff3300"); //刻度渐变色结束值
+    private int textColor = Color.parseColor("#cccccc"); //刻度文字颜色
+    private int centerTextColor = Color.parseColor("#cccccc"); //中间当前值文字颜色
+    private int backGroundColor = Color.TRANSPARENT; //背景色
+    private int lineBackGroundColor = Color.parseColor("#cccccc"); //刻度背景色
+    private int dottedLineBackGroundColor = Color.parseColor("#cccccc"); //虚线背景色
+    private int circleColor = Color.parseColor("#E6E8FA"); //圆球背景色
     private boolean isBalance = false; //刻度是否等长
     private int textSize = 20; // 刻度文字大小
     private int centerTextSize = 30; //中心文字大小
