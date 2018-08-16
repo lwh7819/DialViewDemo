@@ -1,5 +1,9 @@
 # DialView自定义刻度盘
 ### 效果图
+![效果图1](https://raw.githubusercontent.com/lwh7819/source/master/image/dialview1.gif)
+![效果图2](https://raw.githubusercontent.com/lwh7819/source/master/image/dialview2.gif)
+![效果图3](https://raw.githubusercontent.com/lwh7819/source/master/image/dialview3.gif)
+![效果图4](https://raw.githubusercontent.com/lwh7819/source/master/image/dialview4.gif)
 ### 使用
 ```
 <com.example.lvweihao.dialdemo.DialView
