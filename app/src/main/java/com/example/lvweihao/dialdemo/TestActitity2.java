@@ -14,14 +14,14 @@ import butterknife.OnClick;
  * Created by lvweihao on 2018/7/8.
  */
 
-public class TestActitity extends AppCompatActivity {
+public class TestActitity2 extends AppCompatActivity {
     @BindView(R.id.dialView)
     DialView dialView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_test);
+        setContentView(R.layout.activity_test2);
         ButterKnife.bind(this);
 
         //事件回调
@@ -36,6 +36,6 @@ public class TestActitity extends AppCompatActivity {
 
     @OnClick(R.id.btn_open)
     public void onViewClicked() {
-        startActivity(new Intent(this, TestActitity2.class));
+        startActivity(new Intent(this, TestActitity3.class));
     }
 }

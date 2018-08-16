@@ -18,6 +18,8 @@
         </activity>
         <activity android:name=".TestActitity"/>
         <activity android:name=".TestActitity1"/>
+        <activity android:name=".TestActitity2"/>
+        <activity android:name=".TestActitity3"/>
     </application>
 
 </manifest>

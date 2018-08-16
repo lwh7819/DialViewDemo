@@ -1,6 +1,7 @@
 package com.example.lvweihao.dialdemo;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -29,7 +30,6 @@ public class DialView extends View {
     private Paint mTextPaint;
     private TextPaint mCenterTextPaint;
     private Paint mCirclePaint;
-    private int angle = 45;
     private int start, end;
 
     private int mExternalDottedLineRadius;
@@ -46,13 +46,27 @@ public class DialView extends View {
 
     private OnDialViewTouch onDialViewTouch;
 
-    int startColor = Color.parseColor("#ffcc00");
-    int endColor = Color.parseColor("#ff3300");
-    private boolean isBalance = false;
-    private int blankAngle = 90;
-    private int eachAngle = 3;
-    private int strokeWidth = 5;
-    private int lineLong = 70;
+    //自定义属性
+    int startColor = Color.parseColor("#ffcc00"); //刻度渐变色开始值
+    int endColor = Color.parseColor("#ff3300"); //刻度渐变色结束值
+    int textColor = Color.parseColor("#cccccc"); //刻度文字颜色
+    int centerTextColor = Color.parseColor("#cccccc"); //中间当前值文字颜色
+    int backGroundColor = Color.TRANSPARENT; //背景色
+    int lineBackGroundColor = Color.parseColor("#cccccc"); //刻度背景色
+    int dottedLineBackGroundColor = Color.parseColor("#cccccc"); //虚线背景色
+    int circleColor = Color.parseColor("#E6E8FA"); //圆球背景色
+    private boolean isBalance = false; //刻度是否等长
+    private int textSize = 20; // 刻度文字大小
+    private int centerTextSize = 30; //中心文字大小
+    private int angle = 45; //当前角度
+    private int blankAngle = 90; //下方影藏刻度线的弧度
+    private int eachAngle = 3; //每隔几度画一条刻度
+    private int strokeWidth = 5; //刻度线宽
+    private int lineLong = 70; //刻度线长
+    private String startStr = "0"; //刻度初始值文字
+    private String endStr = "100"; //刻度结束值文字
+    private String midStr = "50"; //刻度中间值文字
+    private String unitStr = "%"; //单位文字
 
 
     public DialView(Context context) {
@@ -66,12 +80,48 @@ public class DialView extends View {
     public DialView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
+
+        TypedArray array = getContext().obtainStyledAttributes(attrs, R.styleable.DialView);
+        startColor = array.getColor(R.styleable.DialView_startColor, Color.parseColor("#ffcc00"));
+        endColor = array.getColor(R.styleable.DialView_endColor, Color.parseColor("#ff3300"));
+        textColor = array.getColor(R.styleable.DialView_textColor, Color.parseColor("#cccccc"));
+        centerTextColor = array.getColor(R.styleable.DialView_centerTextColor, Color.parseColor("#cccccc"));
+        backGroundColor = array.getColor(R.styleable.DialView_backGroundColor, Color.TRANSPARENT);
+        lineBackGroundColor = array.getColor(R.styleable.DialView_lineBackGroundColor, Color.parseColor("#cccccc"));
+        dottedLineBackGroundColor = array.getColor(R.styleable.DialView_dottedLineBackGroundColor, Color.parseColor("#cccccc"));
+        circleColor = array.getColor(R.styleable.DialView_circleColor, Color.parseColor("#E6E8FA"));
+        isBalance = array.getBoolean(R.styleable.DialView_isBalance, true);
+        textSize = array.getInt(R.styleable.DialView_textSize, 20);
+        centerTextSize = array.getInt(R.styleable.DialView_centerTextSize, 30);
+        blankAngle = array.getInt(R.styleable.DialView_blankAngle, 90);
+        angle = array.getInt(R.styleable.DialView_initAngle, blankAngle / 2);
+        eachAngle = array.getInt(R.styleable.DialView_eachAngle, 3);
+        strokeWidth = array.getInt(R.styleable.DialView_strokeWidth, 5);
+        lineLong = array.getInt(R.styleable.DialView_lineLong, 70);
+        startStr = array.getString(R.styleable.DialView_startStr);
+        endStr = array.getString(R.styleable.DialView_endStr);
+        midStr = array.getString(R.styleable.DialView_midStr);
+        unitStr = array.getString(R.styleable.DialView_unitStr);
+
+        if (startStr == null) {
+            startStr = "";
+        }
+        if (endStr == null) {
+            endStr = "";
+        }
+        if (midStr == null) {
+            midStr = "";
+        }
+        if (unitStr == null) {
+            unitStr = "";
+        }
+
         initPaint();
         linearGradientUtil = new LinearGradientUtil(startColor, endColor);
 
         Rect rect = new Rect();
         //返回包围整个字符串的最小的一个Rect区域
-        mTextPaint.getTextBounds("50%", 0, "50%".length(), rect);
+        mTextPaint.getTextBounds(midStr + unitStr, 0, (midStr + unitStr).length(), rect);
         strwidth = rect.width();
         strheight = rect.height();
     }
@@ -82,7 +132,7 @@ public class DialView extends View {
         width = w;
         height = h;
         Log.e("lwh", "height:" + height);
-        end = width / 2 - 100 - getPaddingLeft();
+        end = width / 2 - 100 - getPaddingLeft(); //适配padding
         start = end - lineLong;
 
         // 内部虚线的外部半径
@@ -111,7 +161,7 @@ public class DialView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawColor(Color.parseColor("#ffffef"));
+        canvas.drawColor(backGroundColor);
         canvas.translate(width / 2, centerHig);
         Log.e("lwh", "centerHig:" + centerHig);
         float[] pts = {eventX - getLeft(), eventY - getTop()}; //减去margin的值
@@ -119,16 +169,16 @@ public class DialView extends View {
             changeCanvasXY(canvas, pts);//触摸点的坐标转换
         }
 
-        drawDottedLineArc(canvas);
+        drawDottedLineArc(canvas); //画虚线
 
-        if (blankAngle >= 180) {
+        if (blankAngle >= 180) { //画文字
             drawText(canvas);
         } else {
             drawTextAll(canvas);
         }
         if (isBalance) {
-            drawBackCircleBalance(canvas);
-            drawCircleBalance(canvas);
+            drawBackCircleBalance(canvas); //画背景刻度
+            drawCircleBalance(canvas); //画渐变刻度
         } else {
             drawBackCircleNotBalance(canvas);
             drawCircleNotBalance(canvas);
@@ -175,10 +225,10 @@ public class DialView extends View {
         } else if (pts[0] <= 0 && pts[1] <= 0) { //第四象限
             angle = getAngle((int) (90 + round));
         }
-        Log.e("lwc", "angle:" + angle);
+        Log.e("lw", "angle:" + angle);
     }
 
-    private int getAngle(int value) {
+    private int getAngle(int value) {// 获取当前角度四舍五入
         int result = value;
         if (value % eachAngle >= eachAngle / 2) {
             int base = value / eachAngle;
@@ -263,7 +313,7 @@ public class DialView extends View {
         }
     }
 
-    private void setPaintColor(int i) {
+    private void setPaintColor(int i) { //渐变色
         int startAng = blankAngle / 2;
         int aveAng = (360 - blankAngle) / 5;
         if (i >= startAng && i <= startAng + aveAng) {
@@ -279,7 +329,7 @@ public class DialView extends View {
         }
     }
 
-    private void drawDottedLineArc(Canvas canvas) {
+    private void drawDottedLineArc(Canvas canvas) { //画虚线
         int mDottedLineCount = 100; //线条数
         // 360 * Math.PI / 180
         float evenryDegrees = (float) (2.0f * Math.PI / mDottedLineCount);
@@ -308,14 +358,14 @@ public class DialView extends View {
     private void drawTextAll(Canvas canvas) {
         Rect rect = new Rect();
         //返回包围整个字符串的最小的一个Rect区域
-        mTextPaint.getTextBounds("50%", 0, "50%".length(), rect);
+        mTextPaint.getTextBounds(midStr + unitStr, 0, (midStr + unitStr).length(), rect);
         int strwid = rect.width();
         int strhei = rect.height();
-        canvas.drawText("0%", -end + strwid, end - strhei, mTextPaint);
-        canvas.drawText("50%", -strwid / 2, -end - 40, mTextPaint);
-        canvas.drawText("100%", end - strwid * 2, end - strhei, mTextPaint);
+        canvas.drawText(startStr + unitStr, -end + strwid, end - strhei, mTextPaint);
+        canvas.drawText(midStr + unitStr, -strwid / 2, -end - 40, mTextPaint);
+        canvas.drawText(endStr + unitStr, end - strwid * 2, end - strhei, mTextPaint);
 
-        String str = getCurrentPrecent() + "%";
+        String str = getCurrentPrecent() + unitStr;
         mCenterTextPaint.getTextBounds(str, 0, str.length(), rect);
         canvas.drawText(str, -rect.width() / 2, rect.height() / 2, mCenterTextPaint);
     }
@@ -323,14 +373,14 @@ public class DialView extends View {
     private void drawText(Canvas canvas) {
         Rect rect = new Rect();
         //返回包围整个字符串的最小的一个Rect区域
-        mTextPaint.getTextBounds("50%", 0, "50%".length(), rect);
+        mTextPaint.getTextBounds(midStr + unitStr, 0, (midStr + unitStr).length(), rect);
         int strwid = rect.width();
         int strhei = rect.height();
-        canvas.drawText("0%", -end + strwid, strhei, mTextPaint);
-        canvas.drawText("50%", -strwid / 2, -centerHig + strhei + 50, mTextPaint);
-        canvas.drawText("100%", end - strwid * 2, strhei, mTextPaint);
+        canvas.drawText(startStr + unitStr, -end + strwid, strhei, mTextPaint);
+        canvas.drawText(midStr + unitStr, -strwid / 2, -centerHig + strhei + 50, mTextPaint);
+        canvas.drawText(endStr + unitStr, end - strwid * 2, strhei, mTextPaint);
 
-        String str = getCurrentPrecent() + "%";
+        String str = getCurrentPrecent() + unitStr;
         mCenterTextPaint.getTextBounds(str, 0, str.length(), rect);
         canvas.drawText(str, -rect.width() / 2, -centerHig / 2 + rect.height() * 3, mCenterTextPaint);
     }
@@ -341,7 +391,7 @@ public class DialView extends View {
         mBackgroundPaint.setStyle(Paint.Style.STROKE);
         mBackgroundPaint.setStrokeWidth(strokeWidth);
         mBackgroundPaint.setStrokeCap(Paint.Cap.ROUND);
-        mBackgroundPaint.setColor(0xFFCCCCCC);
+        mBackgroundPaint.setColor(lineBackGroundColor);
 
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
@@ -354,22 +404,22 @@ public class DialView extends View {
         mDottedLinePaint = new Paint();
         mDottedLinePaint.setAntiAlias(true);
         mDottedLinePaint.setStrokeWidth(5);
-        mDottedLinePaint.setColor(0xFFCCCCCC);
+        mDottedLinePaint.setColor(dottedLineBackGroundColor);
 
         mTextPaint = new TextPaint();
         mTextPaint.setAntiAlias(true);
-        mTextPaint.setColor(0xFFCCCCCC);
-        mTextPaint.setTextSize(sp2px(20));
+        mTextPaint.setColor(textColor);
+        mTextPaint.setTextSize(sp2px(textSize));
 
         mCenterTextPaint = new TextPaint();
         mCenterTextPaint.setAntiAlias(true);
-        mCenterTextPaint.setColor(0xFFCCCCCC);
-        mCenterTextPaint.setTextSize(sp2px(30));
+        mCenterTextPaint.setColor(centerTextColor);
+        mCenterTextPaint.setTextSize(sp2px(centerTextSize));
 
         mCirclePaint = new Paint();
         mCirclePaint.setAntiAlias(true);
         mCirclePaint.setStyle(Paint.Style.FILL);
-        mCirclePaint.setColor(Color.parseColor("#E6E8FA"));
+        mCirclePaint.setColor(circleColor);
     }
 
     public void setOnDialViewTouchListener(OnDialViewTouch onDialViewTouchListener) {
@@ -385,6 +435,98 @@ public class DialView extends View {
         return 100 * (angle - blankAngle / 2) / (360 - blankAngle);
     }
 
+    public int getStartColor() {
+        return startColor;
+    }
+
+    public void setStartColor(int startColor) {
+        this.startColor = startColor;
+    }
+
+    public int getEndColor() {
+        return endColor;
+    }
+
+    public void setEndColor(int endColor) {
+        this.endColor = endColor;
+    }
+
+    public int getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(int textColor) {
+        this.textColor = textColor;
+    }
+
+    public int getCenterTextColor() {
+        return centerTextColor;
+    }
+
+    public void setCenterTextColor(int centerTextColor) {
+        this.centerTextColor = centerTextColor;
+    }
+
+    public int getBackGroundColor() {
+        return backGroundColor;
+    }
+
+    public void setBackGroundColor(int backGroundColor) {
+        this.backGroundColor = backGroundColor;
+    }
+
+    public int getLineBackGroundColor() {
+        return lineBackGroundColor;
+    }
+
+    public void setLineBackGroundColor(int lineBackGroundColor) {
+        this.lineBackGroundColor = lineBackGroundColor;
+    }
+
+    public int getDottedLineBackGroundColor() {
+        return dottedLineBackGroundColor;
+    }
+
+    public void setDottedLineBackGroundColor(int dottedLineBackGroundColor) {
+        this.dottedLineBackGroundColor = dottedLineBackGroundColor;
+    }
+
+    public int getCircleColor() {
+        return circleColor;
+    }
+
+    public void setCircleColor(int circleColor) {
+        this.circleColor = circleColor;
+    }
+
+    public boolean isBalance() {
+        return isBalance;
+    }
+
+    public void setBalance(boolean balance) {
+        isBalance = balance;
+    }
+
+    public int getTextSize() {
+        return textSize;
+    }
+
+    public void setTextSize(int textSize) {
+        this.textSize = textSize;
+    }
+
+    public int getCenterTextSize() {
+        return centerTextSize;
+    }
+
+    public void setCenterTextSize(int centerTextSize) {
+        this.centerTextSize = centerTextSize;
+    }
+
+    public int getAngle() {
+        return angle;
+    }
+
     /**
      * 设置当前百分比（0-100）
      *
@@ -394,6 +536,70 @@ public class DialView extends View {
         int ang = (int) (blankAngle / 2 + (percent / 100f) * (360 - blankAngle));
         this.angle = getAngle(ang);
         this.postInvalidate();
+    }
+
+    public int getBlankAngle() {
+        return blankAngle;
+    }
+
+    public void setBlankAngle(int blankAngle) {
+        this.blankAngle = blankAngle;
+    }
+
+    public int getEachAngle() {
+        return eachAngle;
+    }
+
+    public void setEachAngle(int eachAngle) {
+        this.eachAngle = eachAngle;
+    }
+
+    public int getStrokeWidth() {
+        return strokeWidth;
+    }
+
+    public void setStrokeWidth(int strokeWidth) {
+        this.strokeWidth = strokeWidth;
+    }
+
+    public int getLineLong() {
+        return lineLong;
+    }
+
+    public void setLineLong(int lineLong) {
+        this.lineLong = lineLong;
+    }
+
+    public String getStartStr() {
+        return startStr;
+    }
+
+    public void setStartStr(String startStr) {
+        this.startStr = startStr;
+    }
+
+    public String getEndStr() {
+        return endStr;
+    }
+
+    public void setEndStr(String endStr) {
+        this.endStr = endStr;
+    }
+
+    public String getMidStr() {
+        return midStr;
+    }
+
+    public void setMidStr(String midStr) {
+        this.midStr = midStr;
+    }
+
+    public String getUnitStr() {
+        return unitStr;
+    }
+
+    public void setUnitStr(String unitStr) {
+        this.unitStr = unitStr;
     }
 
     /**

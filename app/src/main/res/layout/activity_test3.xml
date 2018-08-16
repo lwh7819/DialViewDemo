@@ -15,7 +15,9 @@
         app:midStr="50"
         app:endStr="100"
         app:unitStr="%"
-        app:lineLong="100"/>
+        app:lineLong="70"
+        app:isBalance="false"
+        app:blankAngle="180"/>
 
     <LinearLayout
         android:id="@+id/btn_open"
